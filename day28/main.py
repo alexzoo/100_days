@@ -34,6 +34,7 @@ def start_timer():
     work_sec = WORK_MIN * 60
     short_break_sec = SHORT_BREAK_MIN * 60
     long_break_sec = LONG_BREAK_MIN * 60
+    # import pdb; pdb.set_trace()
 
     if reps % 8 == 0:
         count_down(long_break_sec)
