@@ -2,6 +2,7 @@ from tkinter import *
 from tkinter import messagebox
 import random
 import pyperclip
+import json
 
 # ---------------------------- PASSWORD GENERATOR ------------------------------- #
 
@@ -38,20 +39,55 @@ def write_to_file():
     email = email_entry.get()
     password = password_entry.get()
 
+    new_data = {
+        website: {
+            'email': email,
+            'password': password
+        }
+    }
+
     if len(website) == 0 or len(password) == 0:
         messagebox.showinfo(title='Oops', message='Please fill all fields.')
     else:
+        try:
+            with open('day29_30/data.json', mode='r') as data_file:
+                data = json.load(data_file)
 
-        is_ok = messagebox.askokcancel(title=website, message=f'These are the details entered: \nEmail: {email} '
-                                       f'\nPasssword: {password} \nIs it ok to save?')
+        except FileNotFoundError:
+            with open('day29_30/data.json', mode='w') as data_file:
+                json.dump(new_data, data_file, indent=4)
 
-        if is_ok:
-            with open('day29/data.txt', mode='a') as df:
-                df.write(f'{website} | {email} | {password}\n')
+        else:
+            data.update(new_data)
+            with open('day29_30/data.json', mode='w') as data_file:
+                json.dump(data, data_file, indent=4)
 
-                # clear fields
-                website_entry.delete(0, END)
-                password_entry.delete(0, END)
+        finally:
+            website_entry.delete(0, END)
+            password_entry.delete(0, END)
+
+# ---------------------------- Find password ------------------------------- #
+
+
+def find_password():
+    website = website_entry.get()
+
+    try:
+        with open('day29_30/data.json', mode='r') as data_file:
+            data = json.load(data_file)
+    except FileNotFoundError:
+        messagebox.showerror(title='Error', message='No Data file found')
+
+    else:
+        if website in data:
+            email = data[website]['email']
+            password = data[website]['password']
+
+            messagebox.showinfo(
+                title=website, message=f'Email: {email}\nPassword: {password}')
+        else:
+            messagebox.showinfo(
+                title=website, message=f'No details for the {website} exists.')
 
 # ---------------------------- UI SETUP ------------------------------- #
 
@@ -61,7 +97,7 @@ window.title('Password Manager')
 window.config(padx=50, pady=50)
 
 canvas = Canvas(height=200, width=200)
-logo_image = PhotoImage(file='day29/logo.png')
+logo_image = PhotoImage(file='day29_30/logo.png')
 canvas.create_image(100, 100, image=logo_image)
 canvas.grid(row=0, column=1)
 
@@ -74,13 +110,13 @@ password_label = Label(text='Password:')
 password_label.grid(row=3, column=0)
 
 # Entries
-website_entry = Entry(width=35)
-website_entry.grid(row=1, column=1, columnspan=2)
+website_entry = Entry(width=21)
+website_entry.grid(row=1, column=1)
 website_entry.focus()
-email_entry = Entry(width=35)
+email_entry = Entry(width=38)
 email_entry.grid(row=2, column=1, columnspan=2)
 email_entry.insert(0, 'example@mail.com')
-password_entry = Entry(width=17)
+password_entry = Entry(width=21)
 password_entry.grid(row=3, column=1)
 
 # Buttons
@@ -89,6 +125,8 @@ generate_password_button = Button(
 generate_password_button.grid(row=3, column=2)
 add_button = Button(text='Add', width=33, command=write_to_file)
 add_button.grid(row=4, column=1, columnspan=2)
+search_button = Button(text='Search', width=13, command=find_password)
+search_button.grid(row=1, column=2)
 
 
 window.mainloop()
